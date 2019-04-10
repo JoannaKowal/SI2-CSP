@@ -1,18 +1,6 @@
-public class Constraint {
+import java.util.List;
 
-    private int row;
-    private int column;
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getColumn() {
-        return column;
-    }
-
-    public Constraint(int row, int column) {
-        this.row = row;
-        this.column = column;
-    }
+public interface Constraint {
+    public List<Cell> getCells();
+    public boolean isSatisfied();
 }
