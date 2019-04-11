@@ -8,7 +8,6 @@ public class Cell {
     private List<Integer> wholeDomain;
     private List<Constraint> constraints;
     private List<Constraint> smallerThanConstraints;
-    private List<Constraint> greaterThanConstraints;
 
     public List<Constraint> getSmallerThanConstraints() {
         return smallerThanConstraints;
@@ -48,15 +47,10 @@ public class Cell {
     {
         this.smallerThanConstraints.add(constraint);
     }
-    public void addGraterThan(Constraint constraint)
-    {
-        this.greaterThanConstraints.add(constraint);
-    }
 
     public void reset()
     {
         this.value = 0;
-
     }
 
     public List<Integer> getWholeDomain() {
@@ -71,6 +65,46 @@ public class Cell {
             isSet = false;
         }
         return isSet;
+    }
+    public void updateDomain() //zawężanie dziedziny
+    {
+        for (int i = 0; i < constraints.size(); i++) {
+            for (int j = 0; j < constraints.get(i).getCells().size(); j++) {
+                Cell cell = constraints.get(i).getCells().get(j);
+                int value = cell.getValue();
+                if (value > 0) {
+                    int index = leftInDomain.indexOf(value);
+                    if (index >= 0) {
+                        leftInDomain.remove(index);
+                    }
+                }
+            }
+        }
+
+        int size = wholeDomain.size();
+        for(int i = 0; i < smallerThanConstraints.size(); i++)
+        {
+            for(int j = 0; j < smallerThanConstraints.get(i).getCells().size(); j++)
+            {
+                Cell cell = smallerThanConstraints.get(i).getCells().get(0);
+                if(cell.equals(this))
+                {
+                    int index = leftInDomain.indexOf(size);
+                    if(index >= 0)
+                    {
+                        leftInDomain.remove(index);
+                    }
+                }
+                else
+                {
+                    int index = leftInDomain.indexOf(1);
+                    if(index >= 0)
+                    {
+                        leftInDomain.remove(index);
+                    }
+                }
+            }
+        }
     }
 
 }

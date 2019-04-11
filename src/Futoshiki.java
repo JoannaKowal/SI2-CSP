@@ -1,4 +1,4 @@
-import com.sun.deploy.util.ArrayUtil;
+
 
 import java.io.*;
 import java.util.ArrayList;
@@ -60,7 +60,8 @@ public class Futoshiki {
             }
             setConstraints();
             setDomain();
-            for(int i = 0; i < board.size(); i++)
+
+            for(int i = 0; i < board.size(); i++) // ustawienie leftInDomain
             {
                 for(int j = 0; j < board.size(); j++)
                 {
@@ -74,6 +75,7 @@ public class Futoshiki {
 
                 }
             }
+          adjustDomains();
         }catch(FileNotFoundException exception){}
 
     }
@@ -167,6 +169,58 @@ public class Futoshiki {
                 for(int i = 1; i <= this.size; i++)
                 {
                     cell.getWholeDomain().add(i);
+                }
+            }
+        }
+    }
+    public void adjustDomains()
+    {
+        for(int i = 0 ; i < board.size(); i++)
+        {
+            for(int j = 0; j < board.size(); j++)
+            {
+                if(!board.get(i).get(j).isSet())
+                {
+                    board.get(i).get(j).updateDomain();
+                }
+            }
+        }
+    }
+    public void adjustDomainCell(Cell cell)
+    {
+        for(int i = 0; i < cell.getConstraints().size(); i++) {
+            for (int j = 0; j < cell.getConstraints().get(i).getCells().size(); j++) {
+                Cell emptyCell = cell.getConstraints().get(i).getCells().get(j);
+                if (!emptyCell.isSet()) {
+                    int value = cell.getValue();
+                            if (value > 0) {
+                                int index = emptyCell.getLeftInDomain().indexOf(value);
+                                if (index >= 0) {
+                                    emptyCell.getLeftInDomain().remove(index);
+                                }
+                            }
+
+
+                }
+            }
+        }
+    }
+    public void resetDomain(Cell cell)
+    {
+        for(int i = 0; i < cell.getConstraints().size(); i++)
+        {
+            for(int j = 0; j < cell.getConstraints().get(i).getCells().size(); j++)
+            {
+                Cell emptyCell = cell.getConstraints().get(i).getCells().get(j);
+                if(!emptyCell.isSet())
+                {
+                    int value = cell.getValue();
+                    if (value > 0) {
+                        int index = emptyCell.getLeftInDomain().indexOf(value);
+                        if (index < 0) {
+                            emptyCell.getLeftInDomain().add(cell.getValue());
+                        }
+                    }
                 }
             }
         }
