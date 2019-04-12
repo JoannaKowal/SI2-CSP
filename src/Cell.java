@@ -4,10 +4,21 @@ import java.util.List;
 
 public class Cell {
     private int value;
+    private int index;
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
     private List<Integer> leftInDomain;
     private List<Integer> wholeDomain;
     private List<Constraint> constraints;
     private List<Constraint> smallerThanConstraints;
+    private List<Constraint> allConstraints;
 
     public List<Constraint> getSmallerThanConstraints() {
         return smallerThanConstraints;
@@ -23,12 +34,13 @@ public class Cell {
         this.wholeDomain = new LinkedList<>();
         this.constraints = new ArrayList<>();
         this.smallerThanConstraints = new ArrayList<>();
-
+        this.allConstraints = new ArrayList<>();
 
     }
     public List<Constraint> getConstraints() {
         return constraints;
     }
+
 
     public void setValue(int value) {
         this.value = value;
@@ -42,10 +54,12 @@ public class Cell {
     public void addConstraint(Constraint constraint)
     {
         this.constraints.add(constraint);
+        this.allConstraints.add(constraint);
     }
     public void addSmallerThan(Constraint constraint)
     {
         this.smallerThanConstraints.add(constraint);
+        this.allConstraints.add(constraint);
     }
 
     public void reset()
@@ -65,6 +79,53 @@ public class Cell {
             isSet = false;
         }
         return isSet;
+    }
+    public void recalculateDomain()
+    {
+        assert(!isSet());
+
+        leftInDomain.clear();
+        leftInDomain.addAll(getWholeDomain());
+
+        for (int i = 0; i < leftInDomain.size();)
+        {
+            this.value = leftInDomain.get(i);
+
+            boolean valueOk = true;
+            for (int ci = 0; ci < allConstraints.size(); ci++)
+            {
+                if (!allConstraints.get(ci).isSatisfied())
+                {
+                    valueOk = false;
+                    break;
+                }
+            }
+            this.value = 0;
+
+            if (valueOk)
+            {
+                i++;
+            }
+            else
+            {
+                leftInDomain.remove(i);
+            }
+        }
+    }
+
+    public void updateConstrainedDomains()
+    {
+        //
+        for (int i = 0; i < allConstraints.size(); i++)
+        {
+            for (int j = 0; j < allConstraints.get(i).getCells().size(); j++)
+            {
+                Cell cell = allConstraints.get(i).getCells().get(j);
+
+                if (!cell.isSet())
+                    cell.recalculateDomain();
+            }
+        }
     }
     public void updateDomain() //zawężanie dziedziny
     {

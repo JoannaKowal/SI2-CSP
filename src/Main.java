@@ -1,11 +1,9 @@
-import java.util.List;
-
 public class Main {
     public static void main(String[] args) {
         Futoshiki futoshiki = new Futoshiki("C:\\Users\\Asiek\\Projekty\\SI2-CSP\\src\\test_futo_7_0.txt");
         Backtracking backtracking = new Backtracking(futoshiki);
         double startTime = System.currentTimeMillis();
-        if(backtracking.run())
+        if(backtracking.runAlgorithm())
         {
             for(int i = 0; i < futoshiki.getBoard().size(); i++)
             {

@@ -6,6 +6,9 @@ public class Backtracking {
     int currentIndex;
     int numberOfCalls;
 
+    boolean useFirstHeuristic;
+    boolean useSecondHeuristic;
+
     public Backtracking(Futoshiki futoshiki)
     {
         this.futoshiki = futoshiki;
@@ -22,9 +25,11 @@ public class Backtracking {
         {
             for(int j = 0; j < futoshiki.getBoard().size(); j++)
             {
-                if(!futoshiki.getBoard().get(i).get(j).isSet())
+                Cell cell = futoshiki.getBoard().get(i).get(j);
+                if(!cell.isSet())
                 {
-                    cellsOrder.add(futoshiki.getBoard().get(i).get(j));
+                    cell.setIndex(cellsOrder.size());
+                    cellsOrder.add(cell);
                 }
             }
         }
@@ -143,8 +148,8 @@ public class Backtracking {
         {
             return  true;
         }
-//        Cell currentCell = cellsOrder.get(currentIndex);
-        Cell currentCell = findNextCell();
+        Cell currentCell = cellsOrder.get(currentIndex);
+//        Cell currentCell = findNextCell();
         List<Integer> domain = currentCell.getLeftInDomain();
 //        List<Integer> domain = sortDomain(currentCell);
         for(int  i = 0; i < domain.size(); i++)
@@ -191,4 +196,80 @@ public class Backtracking {
         return  false;
     }
 
+
+    public void SetHeuristics(boolean first, boolean second)
+    {
+        useFirstHeuristic = first;
+        useSecondHeuristic = second;
+    }
+
+    public boolean runAlgorithm()
+    {
+        // initialize algorithm
+        numberOfCalls = 0;
+        currentIndex = -1;
+
+        boolean result = runStep( null );
+
+        return result;
+    }
+
+    // ustala nastepną komorkę dla danego stanu tablicy
+    //
+    public Cell chooseNextCell( Cell prevCell )
+    {
+        if (useFirstHeuristic)
+        {
+            return new Cell(-1);// todo
+        }
+        else
+        {
+            int nextIndex = (prevCell != null) ? prevCell.getIndex() + 1 : 0;
+            return (nextIndex < cellsOrder.size()) ? cellsOrder.get(nextIndex) : null;
+        }
+    }
+
+    public List<Integer> getPossibleValues( Cell cell )
+    {
+        if (useSecondHeuristic)
+        {
+         // todo
+            return new ArrayList<Integer>();
+        }
+        else
+        {
+            return cell.getLeftInDomain();
+        }
+    }
+
+    public boolean runStep( Cell prevCell )
+    {
+        numberOfCalls++;
+        // Choose next cell
+        Cell nextCell = chooseNextCell( prevCell );
+
+        // Board is full
+        if (nextCell == null)
+            return true;
+
+        currentIndex = nextCell.getIndex();
+
+        // Evaluate possible values
+        List<Integer> possibleValues = getPossibleValues(nextCell);
+
+        // For each
+        for (int i =0; i < possibleValues.size(); ++i)
+        {
+            nextCell.setValue(possibleValues.get(i));
+            nextCell.updateConstrainedDomains();
+            if (runStep( nextCell ))
+                return true;
+            else
+                continue;
+        }
+
+        nextCell.reset();
+
+        return false;
+    }
 }
