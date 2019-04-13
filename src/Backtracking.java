@@ -2,14 +2,18 @@ import java.util.*;
 
 public class Backtracking {
     Futoshiki futoshiki;
+    Skyscrapper skyscrapper;
     List<Cell> cellsOrder;
     int currentIndex;
     int numberOfCalls;
+    int numberOfSolutions;
 
     boolean useFirstHeuristic;
     boolean useSecondHeuristic;
+    boolean checkForward;
+    boolean sky;
 
-    public Backtracking(Futoshiki futoshiki)
+    public Backtracking(Futoshiki futoshiki,boolean firstHeuristic,boolean secondHeuristic, boolean checkForward)
     {
         this.futoshiki = futoshiki;
         cellsOrder = new ArrayList<>();
@@ -17,6 +21,26 @@ public class Backtracking {
 //        setCellsOrderMostLimited();
         this.currentIndex = 0;
         this.numberOfCalls = 0;
+        this.numberOfSolutions = 0;
+        this.useFirstHeuristic = firstHeuristic;
+        this.useSecondHeuristic = secondHeuristic;
+        this.checkForward = checkForward;
+        this.sky = false;
+    }
+    public Backtracking(Skyscrapper skyscrapper,boolean firstHeuristic,boolean secondHeuristic, boolean checkForward)
+    {
+        this.skyscrapper = skyscrapper;
+        cellsOrder = new ArrayList<>();
+        setCellsOrderSky();
+//        setCellsOrderMostLimited();
+        this.currentIndex = 0;
+        this.numberOfCalls = 0;
+        this.numberOfSolutions = 0;
+        this.useFirstHeuristic = firstHeuristic;
+        this.useSecondHeuristic = secondHeuristic;
+        this.checkForward = checkForward;
+        this.sky = true;
+
     }
 
     private void setCellsOrder()
@@ -34,26 +58,25 @@ public class Backtracking {
             }
         }
     }
-    private void setCellsOrderMostLimited()
+    private void setCellsOrderSky()
     {
-        cellsOrder.sort(new Comparator<Cell>() {
-            @Override
-            public int compare(Cell cell1, Cell cell2) {
-
-                if(cell1.getLeftInDomain().size() > cell2.getLeftInDomain().size())
+        for(int i = 0; i < skyscrapper.getBoard().size(); i++)
+        {
+            for(int j = 0; j < skyscrapper.getBoard().size(); j++)
+            {
+                Cell cell = skyscrapper.getBoard().get(i).get(j);
+                if(!cell.isSet())
                 {
-                    return 1;
-                } else if (cell1.getLeftInDomain().size() < cell2.getLeftInDomain().size()){
-                    return -1;
-                } else {
-                    return 0;
+                    cell.setIndex(cellsOrder.size());
+                    cellsOrder.add(cell);
                 }
             }
-        });
+        }
     }
-    private Cell findNextCell()
+    private Cell findNextCell() // znalezienie najbardziej ograniczającej z najbardziej ograniczonych
     {
         int minValue = Integer.MAX_VALUE;
+        int maxNumber = 0;
         Cell selectedCell = null;
         for(int i = 0; i < futoshiki.getBoard().size(); i++)
         {
@@ -66,6 +89,46 @@ public class Backtracking {
                     {
                         minValue = cell.getLeftInDomain().size();
                         selectedCell = cell;
+                        maxNumber = cell.getNumberOfDependents();
+                    }
+                    else if(cell.getLeftInDomain().size() == minValue)
+                    {
+                        if(cell.getNumberOfDependents()>maxNumber)
+                        {
+                            selectedCell = cell;
+                            maxNumber = cell.getNumberOfDependents();
+                        }
+                    }
+                }
+            }
+        }
+        return  selectedCell;
+    }
+    private Cell findNextCellSky() // znalezienie najbardziej ograniczającej z najbardziej ograniczonych
+    {
+        int minValue = Integer.MAX_VALUE;
+        int maxNumber = 0;
+        Cell selectedCell = null;
+        for(int i = 0; i < skyscrapper.getBoard().size(); i++)
+        {
+            for(int j = 0; j < skyscrapper.getBoard().size(); j++)
+            {
+                if(!skyscrapper.getBoard().get(i).get(j).isSet())
+                {
+                    Cell cell = skyscrapper.getBoard().get(i).get(j);
+                    if(cell.getLeftInDomain().size() < minValue)
+                    {
+                        minValue = cell.getLeftInDomain().size();
+                        selectedCell = cell;
+                        maxNumber = cell.getNumberOfDependents();
+                    }
+                    else if(cell.getLeftInDomain().size() == minValue)
+                    {
+                        if(cell.getNumberOfDependents()>maxNumber)
+                        {
+                            selectedCell = cell;
+                            maxNumber = cell.getNumberOfDependents();
+                        }
                     }
                 }
             }
@@ -141,67 +204,6 @@ public class Backtracking {
        }
        return sortedDomain;
     }
-    public boolean run()
-    {
-        numberOfCalls++;
-        if(currentIndex == cellsOrder.size())
-        {
-            return  true;
-        }
-        Cell currentCell = cellsOrder.get(currentIndex);
-//        Cell currentCell = findNextCell();
-        List<Integer> domain = currentCell.getLeftInDomain();
-//        List<Integer> domain = sortDomain(currentCell);
-        for(int  i = 0; i < domain.size(); i++)
-        {
-            if(currentCell.getValue() > 0)
-            {
-                futoshiki.resetDomain(currentCell);
-            }
-            currentCell.setValue(domain.get(i));
-            futoshiki.adjustDomains();
-            boolean valueCorrect = true;
-            for (Constraint constraint : currentCell.getConstraints())
-            {
-                if(!constraint.isSatisfied())
-                {
-                    valueCorrect = false;
-                    break;
-                }
-            }
-            if(valueCorrect) {
-                for (Constraint smallerThanConstraint : currentCell.getSmallerThanConstraints()) {
-                    if (!smallerThanConstraint.isSatisfied()) {
-                        valueCorrect = false;
-                        break;
-                    }
-                }
-            }
-            if(valueCorrect)
-            {
-                currentIndex++;
-                if(run())
-                {
-                    return true;
-                }
-                continue;
-            }
-        }
-        if(currentCell.isSet())
-        {
-            futoshiki.resetDomain(currentCell);
-        }
-        currentCell.reset();
-        currentIndex--;
-        return  false;
-    }
-
-
-    public void SetHeuristics(boolean first, boolean second)
-    {
-        useFirstHeuristic = first;
-        useSecondHeuristic = second;
-    }
 
     public boolean runAlgorithm()
     {
@@ -213,6 +215,16 @@ public class Backtracking {
 
         return result;
     }
+    public boolean runAlgorithmSky()
+    {
+        // initialize algorithm
+        numberOfCalls = 0;
+        currentIndex = -1;
+
+        boolean result = runStepSky( null );
+
+        return result;
+    }
 
     // ustala nastepną komorkę dla danego stanu tablicy
     //
@@ -220,7 +232,21 @@ public class Backtracking {
     {
         if (useFirstHeuristic)
         {
-            return new Cell(-1);// todo
+            //return new Cell(-1);// todo
+            return findNextCell();
+        }
+        else
+        {
+            int nextIndex = (prevCell != null) ? prevCell.getIndex() + 1 : 0;
+            return (nextIndex < cellsOrder.size()) ? cellsOrder.get(nextIndex) : null;
+        }
+    }
+    public Cell chooseNextCellSky( Cell prevCell )
+    {
+        if (useFirstHeuristic)
+        {
+            //return new Cell(-1);// todo
+            return findNextCellSky();
         }
         else
         {
@@ -234,7 +260,8 @@ public class Backtracking {
         if (useSecondHeuristic)
         {
          // todo
-            return new ArrayList<Integer>();
+          //  return new ArrayList<Integer>();
+            return sortDomain(cell);
         }
         else
         {
@@ -250,7 +277,10 @@ public class Backtracking {
 
         // Board is full
         if (nextCell == null)
-            return true;
+        {
+            numberOfSolutions++;
+            return false;
+        }
 
         currentIndex = nextCell.getIndex();
 
@@ -261,7 +291,18 @@ public class Backtracking {
         for (int i =0; i < possibleValues.size(); ++i)
         {
             nextCell.setValue(possibleValues.get(i));
-            nextCell.updateConstrainedDomains();
+            boolean result = nextCell.updateConstrainedDomains();
+            if(sky)
+            {
+                if(!nextCell.checkSkyConstraints())
+                {
+                    continue;
+                }
+            }
+            if (checkForward && !result)
+            {
+                continue;
+            }
             if (runStep( nextCell ))
                 return true;
             else
@@ -269,7 +310,48 @@ public class Backtracking {
         }
 
         nextCell.reset();
+        nextCell.updateConstrainedDomains();
+        return false;
+    }
+    public boolean runStepSky( Cell prevCell )
+    {
+        numberOfCalls++;
+        // Choose next cell
+        Cell nextCell = chooseNextCellSky( prevCell );
 
+        // Board is full
+        if (nextCell == null)
+        {
+            numberOfSolutions++;
+            return  false;
+        }
+        currentIndex = nextCell.getIndex();
+
+        // Evaluate possible values
+        List<Integer> possibleValues = getPossibleValues(nextCell);
+
+        // For each
+        for (int i =0; i < possibleValues.size(); ++i)
+        {
+            nextCell.setValue(possibleValues.get(i));
+            boolean result = nextCell.updateConstrainedDomains();
+                if(!nextCell.checkSkyConstraints())
+                {
+                    continue;
+                }
+
+            if (checkForward && !result)
+            {
+                continue;
+            }
+            if (runStepSky( nextCell ))
+                return true;
+            else
+                continue;
+        }
+
+        nextCell.reset();
+        nextCell.updateConstrainedDomains();
         return false;
     }
 }

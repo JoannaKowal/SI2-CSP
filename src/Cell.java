@@ -5,6 +5,15 @@ import java.util.List;
 public class Cell {
     private int value;
     private int index;
+    private int numberOfDependents;
+    private List<Integer> leftInDomain;
+    private List<Integer> wholeDomain;
+    private List<Constraint> constraints;
+    private List<Constraint> smallerThanConstraints;
+    private List<Constraint> allConstraints;
+    private List<SkyscrapperConstraint> skyConstraints;
+    final int constraintsSize = 2; // constrainty dla komórki: wiersz i kolumna
+
 
     public int getIndex() {
         return index;
@@ -14,18 +23,16 @@ public class Cell {
         this.index = index;
     }
 
-    private List<Integer> leftInDomain;
-    private List<Integer> wholeDomain;
-    private List<Constraint> constraints;
-    private List<Constraint> smallerThanConstraints;
-    private List<Constraint> allConstraints;
-
     public List<Constraint> getSmallerThanConstraints() {
         return smallerThanConstraints;
     }
 
     public List<Integer> getLeftInDomain() {
         return leftInDomain;
+    }
+
+    public List<SkyscrapperConstraint> getSkyConstraints() {
+        return skyConstraints;
     }
 
     public Cell(int value) {
@@ -35,6 +42,8 @@ public class Cell {
         this.constraints = new ArrayList<>();
         this.smallerThanConstraints = new ArrayList<>();
         this.allConstraints = new ArrayList<>();
+        this.numberOfDependents = 0;
+        this.skyConstraints = new ArrayList<>();
 
     }
     public List<Constraint> getConstraints() {
@@ -80,10 +89,9 @@ public class Cell {
         }
         return isSet;
     }
-    public void recalculateDomain()
+    public boolean recalculateDomain()
     {
-        assert(!isSet());
-
+        boolean result = true;
         leftInDomain.clear();
         leftInDomain.addAll(getWholeDomain());
 
@@ -109,24 +117,39 @@ public class Cell {
             else
             {
                 leftInDomain.remove(i);
+                if(leftInDomain.size() == 0)
+                {
+                    result = false;
+                }
             }
         }
+        return  result;
     }
 
-    public void updateConstrainedDomains()
+    public boolean updateConstrainedDomains()
     {
-        //
-        for (int i = 0; i < allConstraints.size(); i++)
+        boolean result = true;
+        this.numberOfDependents=0;
+        for (int i = 0; i<constraintsSize; i++)
         {
             for (int j = 0; j < allConstraints.get(i).getCells().size(); j++)
             {
                 Cell cell = allConstraints.get(i).getCells().get(j);
 
                 if (!cell.isSet())
-                    cell.recalculateDomain();
+                {
+                    if(!cell.recalculateDomain())
+                    {
+                        result = false;
+                    }
+                    this.numberOfDependents++;
+                }
             }
         }
+        return  result;
     }
+
+
     public void updateDomain() //zawężanie dziedziny
     {
         for (int i = 0; i < constraints.size(); i++) {
@@ -167,5 +190,176 @@ public class Cell {
             }
         }
     }
+    public  boolean checkSkyConstraints()
+    {
+        if(checkFromTop() && checkFromBottom() && checkFromLeft() && checkFromRight())
+        {
+            return true;
+        }
+        return  false;
 
+    }
+       private boolean checkFromTop()
+    {
+        int visibleSkyscrappers = 0;
+        boolean isSatisfied = true;
+        int height = 0;
+        if(skyConstraints.get(0).getConstraints().get(0) == 0)
+        {
+            return  true;
+        }
+        for(int i = 0; i < allConstraints.get(1).getCells().size(); i++) // allConstraints.get(1) to kolumna
+        {
+            Cell cell = allConstraints.get(1).getCells().get(i);
+            if(cell.isSet())
+            {
+                if(cell.getValue() > height)
+                {
+                    height = cell.getValue();
+                    visibleSkyscrappers++;
+                }
+            }
+            else
+            {
+                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(0))
+                {
+                    isSatisfied = false;
+                    return  isSatisfied;
+                }
+                else
+                {
+                    return isSatisfied;
+                }
+            }
+        }
+        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(0))
+        {
+            isSatisfied = false;
+        }
+        return isSatisfied;
+    }
+
+    private boolean checkFromBottom()
+    {
+        int visibleSkyscrappers = 0;
+        boolean isSatisfied = true;
+        int height = 0;
+        if(skyConstraints.get(0).getConstraints().get(1) == 0)
+        {
+            return  true;
+        }
+        for(int i = allConstraints.get(1).getCells().size() - 1; i >= 0 ; i--) // allConstraints.get(1) to kolumna
+        {
+            Cell cell = allConstraints.get(1).getCells().get(i);
+            if(cell.isSet())
+            {
+                if(cell.getValue() > height)
+                {
+                    height = cell.getValue();
+                    visibleSkyscrappers++;
+                }
+            }
+            else
+            {
+                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(1))
+                {
+                    isSatisfied = false;
+                    return  isSatisfied;
+                }
+                else
+                {
+                    return isSatisfied;
+                }
+            }
+        }
+        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(1))
+        {
+            isSatisfied = false;
+        }
+        return isSatisfied;
+    }
+    private boolean checkFromLeft()
+    {
+        int visibleSkyscrappers = 0;
+        boolean isSatisfied = true;
+        int height = 0;
+        if(skyConstraints.get(0).getConstraints().get(2) == 0)
+        {
+            return  true;
+        }
+        for(int i = 0; i < allConstraints.get(0).getCells().size() ; i++) // allConstraints.get(0) to wiersz
+        {
+            Cell cell = allConstraints.get(0).getCells().get(i);
+            if(cell.isSet())
+            {
+                if(cell.getValue() > height)
+                {
+                    height = cell.getValue();
+                    visibleSkyscrappers++;
+                }
+            }
+            else
+            {
+                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(2)) //lewy
+                {
+                    isSatisfied = false;
+                    return  isSatisfied;
+                }
+                else
+                {
+                    return isSatisfied;
+                }
+            }
+        }
+        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(2))
+        {
+            isSatisfied = false;
+        }
+        return isSatisfied;
+    }
+    private boolean checkFromRight()
+    {
+        int visibleSkyscrappers = 0;
+        boolean isSatisfied = true;
+        int height = 0;
+        if(skyConstraints.get(0).getConstraints().get(3) == 0)
+        {
+            return  true;
+        }
+        for(int i = allConstraints.get(0).getCells().size() - 1; i >= 0 ; i--) // allConstraints.get(0) to wiersz
+        {
+            Cell cell = allConstraints.get(0).getCells().get(i);
+            if(cell.isSet())
+            {
+                if(cell.getValue() > height)
+                {
+                    height = cell.getValue();
+                    visibleSkyscrappers++;
+                }
+            }
+            else
+            {
+                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(3)) //prawy
+                {
+                    isSatisfied = false;
+                    return  isSatisfied;
+                }
+                else
+                {
+                    return isSatisfied;
+                }
+            }
+        }
+        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(3))
+        {
+            isSatisfied = false;
+        }
+        return isSatisfied;
+    }
+
+
+
+    public int getNumberOfDependents() {
+        return numberOfDependents;
+    }
 }
