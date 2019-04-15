@@ -1,3 +1,4 @@
+import java.sql.SQLOutput;
 import java.util.*;
 
 public class Backtracking {
@@ -268,7 +269,18 @@ public class Backtracking {
             return cell.getLeftInDomain();
         }
     }
+    private boolean checkSmallerThanConstraints(Cell cell)
+    {
+        for(int i=0;i<cell.getSmallerThanConstraints().size();i++)
+        {
+            if(!cell.getSmallerThanConstraints().get(i).isSatisfied())
+            {
+                return false;
+            }
+        }
+        return true;
 
+    }
     public boolean runStep( Cell prevCell )
     {
         numberOfCalls++;
@@ -279,7 +291,18 @@ public class Backtracking {
         if (nextCell == null)
         {
             numberOfSolutions++;
-            return false;
+            System.out.println("Znaleziono rozwiązanie");
+
+//            for(int i = 0; i < futoshiki.getBoard().size(); i++)
+//            {
+//                for(int j = 0; j < futoshiki.getBoard().size(); j++)
+//                {
+//                    System.out.print(futoshiki.getBoard().get(i).get(j).getValue());
+//                }
+//                System.out.println();
+//            }
+            return false;//szukanie wszystkich rozwiązań
+          // return true;//szukanie pierwszego rozwiązania
         }
 
         currentIndex = nextCell.getIndex();
@@ -290,15 +313,14 @@ public class Backtracking {
         // For each
         for (int i =0; i < possibleValues.size(); ++i)
         {
+
             nextCell.setValue(possibleValues.get(i));
-            boolean result = nextCell.updateConstrainedDomains();
-            if(sky)
+            if(!checkSmallerThanConstraints(nextCell))
             {
-                if(!nextCell.checkSkyConstraints())
-                {
-                    continue;
-                }
+                continue;
             }
+            boolean result = nextCell.updateConstrainedDomains();
+
             if (checkForward && !result)
             {
                 continue;
@@ -323,7 +345,7 @@ public class Backtracking {
         if (nextCell == null)
         {
             numberOfSolutions++;
-            return  false;
+            return  true;
         }
         currentIndex = nextCell.getIndex();
 
@@ -335,7 +357,8 @@ public class Backtracking {
         {
             nextCell.setValue(possibleValues.get(i));
             boolean result = nextCell.updateConstrainedDomains();
-                if(!nextCell.checkSkyConstraints())
+
+                if(!nextCell.checkSkyConstraintsAll())
                 {
                     continue;
                 }

@@ -148,7 +148,24 @@ public class Cell {
         }
         return  result;
     }
+    public int DFS(int pos)
+    {
+        int result = 0;
+        for(int i = 0; i < smallerThanConstraints.size(); i++)
+        {
 
+                Cell cell = smallerThanConstraints.get(i).getCells().get(pos);
+                if(cell.equals(this))
+                {
+                    Cell nextCell = smallerThanConstraints.get(i).getCells().get(1-pos);
+                    result =  Math.max(result,nextCell.DFS(pos)+1);
+                }
+
+
+        }
+        return result;
+
+    }
 
     public void updateDomain() //zawężanie dziedziny
     {
@@ -166,193 +183,91 @@ public class Cell {
         }
 
         int size = wholeDomain.size();
-        for(int i = 0; i < smallerThanConstraints.size(); i++)
+        int chainSize = DFS(0);
+        for(int ci=size;ci>size-chainSize; ci--)
         {
-            for(int j = 0; j < smallerThanConstraints.get(i).getCells().size(); j++)
+            int index = leftInDomain.indexOf(ci);
+            if(index >= 0)
             {
-                Cell cell = smallerThanConstraints.get(i).getCells().get(0);
-                if(cell.equals(this))
-                {
-                    int index = leftInDomain.indexOf(size);
-                    if(index >= 0)
-                    {
-                        leftInDomain.remove(index);
-                    }
-                }
-                else
-                {
-                    int index = leftInDomain.indexOf(1);
-                    if(index >= 0)
-                    {
-                        leftInDomain.remove(index);
-                    }
-                }
+                leftInDomain.remove(index);
             }
         }
-    }
-    public  boolean checkSkyConstraints()
-    {
-        if(checkFromTop() && checkFromBottom() && checkFromLeft() && checkFromRight())
-        {
-            return true;
+        chainSize = DFS(1);
+        for(int ci=1;ci<=chainSize; ci++) {
+            int index = leftInDomain.indexOf(ci);
+            if (index >= 0) {
+                leftInDomain.remove(index);
+            }
         }
-        return  false;
 
     }
-       private boolean checkFromTop()
-    {
-        int visibleSkyscrappers = 0;
-        boolean isSatisfied = true;
-        int height = 0;
-        if(skyConstraints.get(0).getConstraints().get(0) == 0)
-        {
-            return  true;
-        }
-        for(int i = 0; i < allConstraints.get(1).getCells().size(); i++) // allConstraints.get(1) to kolumna
-        {
-            Cell cell = allConstraints.get(1).getCells().get(i);
-            if(cell.isSet())
-            {
-                if(cell.getValue() > height)
-                {
-                    height = cell.getValue();
-                    visibleSkyscrappers++;
-                }
-            }
-            else
-            {
-                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(0))
-                {
-                    isSatisfied = false;
-                    return  isSatisfied;
-                }
-                else
-                {
-                    return isSatisfied;
-                }
-            }
-        }
-        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(0))
-        {
-            isSatisfied = false;
-        }
-        return isSatisfied;
-    }
 
-    private boolean checkFromBottom()
+    public boolean checkSkyConstraintsAll()
     {
-        int visibleSkyscrappers = 0;
         boolean isSatisfied = true;
-        int height = 0;
-        if(skyConstraints.get(0).getConstraints().get(1) == 0)
-        {
-            return  true;
-        }
-        for(int i = allConstraints.get(1).getCells().size() - 1; i >= 0 ; i--) // allConstraints.get(1) to kolumna
-        {
-            Cell cell = allConstraints.get(1).getCells().get(i);
-            if(cell.isSet())
+        int start = 0;
+        int end = 0;
+        int delta = 0;
+        int rowColumn = 0;//0 - wiersz, 1 - kolumna
+        for(int dir = 0;dir <4;dir ++) {
+            if(dir==0) {
+                start = 0;
+                end = allConstraints.get(1).getCells().size();
+                delta = 1;
+                rowColumn=1;
+            }
+            else if (dir==1) {
+                start = allConstraints.get(1).getCells().size()-1;
+                end = -1;
+                delta = -1;
+                rowColumn=1;
+            }
+            else if(dir==2) {
+                start = 0;
+                end = allConstraints.get(1).getCells().size();
+                delta = 1;
+                rowColumn=0;
+            }
+            else {
+                start = allConstraints.get(1).getCells().size()-1;
+                end = -1;
+                delta = -1;
+                rowColumn = 0;
+            }
+
+            int visibleSkyscrappers = 0;
+
+            int height = 0;
+            if (skyConstraints.get(0).getConstraints().get(dir) == 0) {
+                continue;
+            }
+            boolean allSet = true;//caly rzad lub kolumna wypelnione
+            for (int i = start; i != end; i+=delta) // allConstraints.get(1) to kolumna
             {
-                if(cell.getValue() > height)
-                {
-                    height = cell.getValue();
-                    visibleSkyscrappers++;
+                Cell cell = allConstraints.get(rowColumn).getCells().get(i);
+                if (cell.isSet()) {
+                    if (cell.getValue() > height) {
+                        height = cell.getValue();
+                        visibleSkyscrappers++;
+                    }
+                } else {
+                    if (visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(dir)) {
+                        isSatisfied = false;
+                        return isSatisfied;
+                    }
+                    else {
+                        allSet = false;
+                        break;
+                    }
                 }
             }
-            else
+            if(allSet)
             {
-                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(1))
-                {
+                if (visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(dir)) {
                     isSatisfied = false;
-                    return  isSatisfied;
-                }
-                else
-                {
                     return isSatisfied;
                 }
             }
-        }
-        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(1))
-        {
-            isSatisfied = false;
-        }
-        return isSatisfied;
-    }
-    private boolean checkFromLeft()
-    {
-        int visibleSkyscrappers = 0;
-        boolean isSatisfied = true;
-        int height = 0;
-        if(skyConstraints.get(0).getConstraints().get(2) == 0)
-        {
-            return  true;
-        }
-        for(int i = 0; i < allConstraints.get(0).getCells().size() ; i++) // allConstraints.get(0) to wiersz
-        {
-            Cell cell = allConstraints.get(0).getCells().get(i);
-            if(cell.isSet())
-            {
-                if(cell.getValue() > height)
-                {
-                    height = cell.getValue();
-                    visibleSkyscrappers++;
-                }
-            }
-            else
-            {
-                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(2)) //lewy
-                {
-                    isSatisfied = false;
-                    return  isSatisfied;
-                }
-                else
-                {
-                    return isSatisfied;
-                }
-            }
-        }
-        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(2))
-        {
-            isSatisfied = false;
-        }
-        return isSatisfied;
-    }
-    private boolean checkFromRight()
-    {
-        int visibleSkyscrappers = 0;
-        boolean isSatisfied = true;
-        int height = 0;
-        if(skyConstraints.get(0).getConstraints().get(3) == 0)
-        {
-            return  true;
-        }
-        for(int i = allConstraints.get(0).getCells().size() - 1; i >= 0 ; i--) // allConstraints.get(0) to wiersz
-        {
-            Cell cell = allConstraints.get(0).getCells().get(i);
-            if(cell.isSet())
-            {
-                if(cell.getValue() > height)
-                {
-                    height = cell.getValue();
-                    visibleSkyscrappers++;
-                }
-            }
-            else
-            {
-                if(visibleSkyscrappers > skyConstraints.get(0).getConstraints().get(3)) //prawy
-                {
-                    isSatisfied = false;
-                    return  isSatisfied;
-                }
-                else
-                {
-                    return isSatisfied;
-                }
-            }
-        }
-        if(visibleSkyscrappers != skyConstraints.get(0).getConstraints().get(3))
-        {
-            isSatisfied = false;
         }
         return isSatisfied;
     }

@@ -42,6 +42,7 @@ public class Skyscrapper {
             setCellsConstraints(constraints);
             setDomain();
             setConstraints();
+            fixDomains();
         }catch(FileNotFoundException exception){}
 
     }
@@ -90,6 +91,32 @@ public class Skyscrapper {
             this.board.add(row);
         }
     }
+    private void fixDomains()
+    {
+        for (List<Cell> cells : board) {
+            for (Cell cell : cells) {
+                List <Integer> skyConstraints =  cell.getSkyConstraints().get(0).getConstraints();
+                if(skyConstraints.get(2)==1){
+                    Cell borderCell = cell.getConstraints().get(0).getCells().get(0);
+                    borderCell.setValue(size);
+                }
+                if(skyConstraints.get(3)==1){
+                    Cell borderCell = cell.getConstraints().get(0).getCells().get(size-1);
+                    borderCell.setValue(size);
+                }
+                if(skyConstraints.get(0)==1){
+                    Cell borderCell = cell.getConstraints().get(1).getCells().get(0);
+                    borderCell.setValue(size);
+                }
+                if(skyConstraints.get(1)==1){
+                    Cell borderCell = cell.getConstraints().get(1).getCells().get(size-1);
+                    borderCell.setValue(size);
+                }
+
+            }
+        }
+
+    }
     private void setDomain()
     {
         for (List<Cell> cells : board) {
@@ -101,6 +128,7 @@ public class Skyscrapper {
                 }
             }
         }
+
     }
     private void setConstraints() {
         for (int i = 0; i < board.size(); i++) //wczytanie wierszy
