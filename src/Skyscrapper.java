@@ -2,21 +2,18 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Skyscrapper {
-    private List<List<Cell>> board;
+public class Skyscrapper extends Game{
+
     private List<List<Cell>> constraints;
     private int size;
 
     public Skyscrapper(String fileName) {
-        this.board = new ArrayList<>();
         this.constraints = new ArrayList<>();
         load(fileName);
 
 
     }
-    public List<List<Cell>> getBoard() {
-        return board;
-    }
+
 
     public void load(String fileName)
     {

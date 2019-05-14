@@ -153,15 +153,12 @@ public class Cell {
         int result = 0;
         for(int i = 0; i < smallerThanConstraints.size(); i++)
         {
-
-                Cell cell = smallerThanConstraints.get(i).getCells().get(pos);
-                if(cell.equals(this))
-                {
-                    Cell nextCell = smallerThanConstraints.get(i).getCells().get(1-pos);
-                    result =  Math.max(result,nextCell.DFS(pos)+1);
-                }
-
-
+            Cell cell = smallerThanConstraints.get(i).getCells().get(pos);
+            if(cell.equals(this))
+            {
+                Cell nextCell = smallerThanConstraints.get(i).getCells().get(1-pos);
+                result =  Math.max(result,nextCell.DFS(pos)+1);
+            }
         }
         return result;
 
@@ -184,7 +181,7 @@ public class Cell {
 
         int size = wholeDomain.size();
         int chainSize = DFS(0);
-        for(int ci=size;ci>size-chainSize; ci--)
+        for(int ci = size; ci > size - chainSize; ci--)
         {
             int index = leftInDomain.indexOf(ci);
             if(index >= 0)
@@ -193,13 +190,28 @@ public class Cell {
             }
         }
         chainSize = DFS(1);
-        for(int ci=1;ci<=chainSize; ci++) {
+        for(int ci = 1; ci <= chainSize; ci++) {
             int index = leftInDomain.indexOf(ci);
             if (index >= 0) {
                 leftInDomain.remove(index);
             }
         }
 
+        for (int i = 0; i < smallerThanConstraints.size(); i++)
+        {
+            Cell cellA = smallerThanConstraints.get(i).getCells().get(0);
+            Cell cellB = smallerThanConstraints.get(i).getCells().get(1);
+
+            if (cellA != this && cellA.isSet())
+            {
+                leftInDomain.removeIf(n -> (n <= cellA.getValue()));
+            }
+
+            if (cellB != this && cellB.isSet())
+            {
+                leftInDomain.removeIf(n -> (n >= cellB.getValue()));
+            }
+        }
     }
 
     public boolean checkSkyConstraintsAll()
@@ -209,24 +221,24 @@ public class Cell {
         int end = 0;
         int delta = 0;
         int rowColumn = 0;//0 - wiersz, 1 - kolumna
-        for(int dir = 0;dir <4;dir ++) {
-            if(dir==0) {
+        for(int dir = 0; dir < 4; dir ++) {
+            if(dir == 0) {
                 start = 0;
-                end = allConstraints.get(1).getCells().size();
+                end = allConstraints.get(1).getCells().size(); // allConstraints.get(1) to kolumna
                 delta = 1;
-                rowColumn=1;
+                rowColumn = 1;
             }
-            else if (dir==1) {
+            else if (dir == 1) {
                 start = allConstraints.get(1).getCells().size()-1;
                 end = -1;
                 delta = -1;
-                rowColumn=1;
+                rowColumn =1 ;
             }
-            else if(dir==2) {
+            else if(dir == 2) {
                 start = 0;
                 end = allConstraints.get(1).getCells().size();
                 delta = 1;
-                rowColumn=0;
+                rowColumn = 0;
             }
             else {
                 start = allConstraints.get(1).getCells().size()-1;
@@ -236,14 +248,14 @@ public class Cell {
             }
 
             int visibleSkyscrappers = 0;
-
             int height = 0;
+
             if (skyConstraints.get(0).getConstraints().get(dir) == 0) {
                 continue;
             }
             boolean allSet = true;//caly rzad lub kolumna wypelnione
-            for (int i = start; i != end; i+=delta) // allConstraints.get(1) to kolumna
-            {
+            for (int i = start; i != end; i+= delta)
+                {
                 Cell cell = allConstraints.get(rowColumn).getCells().get(i);
                 if (cell.isSet()) {
                     if (cell.getValue() > height) {

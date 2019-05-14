@@ -94,7 +94,7 @@ public class Backtracking {
                     }
                     else if(cell.getLeftInDomain().size() == minValue)
                     {
-                        if(cell.getNumberOfDependents()>maxNumber)
+                        if(cell.getNumberOfDependents() > maxNumber)
                         {
                             selectedCell = cell;
                             maxNumber = cell.getNumberOfDependents();
@@ -125,7 +125,7 @@ public class Backtracking {
                     }
                     else if(cell.getLeftInDomain().size() == minValue)
                     {
-                        if(cell.getNumberOfDependents()>maxNumber)
+                        if(cell.getNumberOfDependents() > maxNumber)
                         {
                             selectedCell = cell;
                             maxNumber = cell.getNumberOfDependents();
@@ -233,7 +233,6 @@ public class Backtracking {
     {
         if (useFirstHeuristic)
         {
-            //return new Cell(-1);// todo
             return findNextCell();
         }
         else
@@ -260,26 +259,12 @@ public class Backtracking {
     {
         if (useSecondHeuristic)
         {
-         // todo
-          //  return new ArrayList<Integer>();
             return sortDomain(cell);
         }
         else
         {
             return cell.getLeftInDomain();
         }
-    }
-    private boolean checkSmallerThanConstraints(Cell cell)
-    {
-        for(int i=0;i<cell.getSmallerThanConstraints().size();i++)
-        {
-            if(!cell.getSmallerThanConstraints().get(i).isSatisfied())
-            {
-                return false;
-            }
-        }
-        return true;
-
     }
     public boolean runStep( Cell prevCell )
     {
@@ -293,14 +278,14 @@ public class Backtracking {
             numberOfSolutions++;
             System.out.println("Znaleziono rozwiązanie");
 
-//            for(int i = 0; i < futoshiki.getBoard().size(); i++)
-//            {
-//                for(int j = 0; j < futoshiki.getBoard().size(); j++)
-//                {
-//                    System.out.print(futoshiki.getBoard().get(i).get(j).getValue());
-//                }
-//                System.out.println();
-//            }
+            for(int i = 0; i < futoshiki.getBoard().size(); i++)
+            {
+                for(int j = 0; j < futoshiki.getBoard().size(); j++)
+                {
+                    System.out.print(futoshiki.getBoard().get(i).get(j).getValue());
+                }
+                System.out.println();
+            }
             return false;//szukanie wszystkich rozwiązań
           // return true;//szukanie pierwszego rozwiązania
         }
@@ -313,12 +298,7 @@ public class Backtracking {
         // For each
         for (int i =0; i < possibleValues.size(); ++i)
         {
-
             nextCell.setValue(possibleValues.get(i));
-            if(!checkSmallerThanConstraints(nextCell))
-            {
-                continue;
-            }
             boolean result = nextCell.updateConstrainedDomains();
 
             if (checkForward && !result)
@@ -345,7 +325,17 @@ public class Backtracking {
         if (nextCell == null)
         {
             numberOfSolutions++;
-            return  true;
+            for(int i = 0; i < skyscrapper.getBoard().size(); i++)
+            {
+                for(int j = 0; j < skyscrapper.getBoard().size(); j++)
+                {
+                    System.out.print(skyscrapper.getBoard().get(i).get(j).getValue());
+                }
+                System.out.println();
+            }
+
+
+            return false;
         }
         currentIndex = nextCell.getIndex();
 
@@ -377,4 +367,5 @@ public class Backtracking {
         nextCell.updateConstrainedDomains();
         return false;
     }
+
 }

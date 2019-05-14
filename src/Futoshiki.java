@@ -4,22 +4,17 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Futoshiki {
-    private List<List<Cell>> board;
+public class Futoshiki  extends Game{
     private List<List<Cell>> constraints;
     private int size;
 
     public Futoshiki(String fileName) {
-        this.board = new ArrayList<>();
         this.constraints = new ArrayList<>();
         load(fileName);
 
     }
 
-    public List<List<Cell>> getBoard() {
-        return board;
-    }
-
+    public boolean isLoaded() { return !getBoard().isEmpty(); }
     public void load(String fileName)
     {
         try{
@@ -87,7 +82,8 @@ public class Futoshiki {
                     }
                 }
             }
-        }catch(FileNotFoundException exception){}
+        }catch(FileNotFoundException exception){
+        }
 
     }
     private String[] readBoard(BufferedReader br)
